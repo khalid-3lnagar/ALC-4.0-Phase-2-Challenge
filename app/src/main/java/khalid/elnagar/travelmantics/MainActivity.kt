@@ -10,7 +10,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProviders
-import khalid.elnagar.travelmantics.domain.DealUseCases
+import khalid.elnagar.travelmantics.domain.SaveDealUseCase
 import khalid.elnagar.travelmantics.domain.toMutableLiveData
 import khalid.elnagar.travelmantics.entities.TravelDeal
 import kotlinx.android.synthetic.main.activity_main.*
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 //viewModel
 class MakeDealViewModel(
     val loadingLD: MutableLiveData<Boolean> = false.toMutableLiveData(),
-    private val useCases: DealUseCases = DealUseCases(loadingLD)
+    private val useCases: SaveDealUseCase = SaveDealUseCase(loadingLD)
 ) : ViewModel() {
 
     fun saveDeal(
