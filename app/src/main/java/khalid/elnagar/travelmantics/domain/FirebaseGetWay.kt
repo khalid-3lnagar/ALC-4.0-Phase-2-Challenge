@@ -1,29 +1,29 @@
 package khalid.elnagar.travelmantics.domain
 
-import androidx.lifecycle.MutableLiveData
+import android.util.Log
+import androidx.lifecycle.LiveData
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import khalid.elnagar.travelmantics.entities.TravelDeal
 
-const val TRAVEL_DEALS_KEY = "traveldeals"
+private const val TRAVEL_DEALS_KEY = "traveldeals"
 
-class FirebaseGetWay {
+object FirebaseGetWay {
+    private val deals = mutableListOf<TravelDeal>().toMutableLiveData()
     private val firebaseDatabase by lazy { FirebaseDatabase.getInstance() }
     private val databaseReference by lazy { firebaseDatabase.reference.child(TRAVEL_DEALS_KEY) }
-    private val deals = mutableListOf<TravelDeal>()
-    private lateinit var travelDeals: MutableLiveData<List<TravelDeal>>
-
     private val childEventListener by lazy {
         object : ChildEventListener {
-
             override fun onChildAdded(snapshot: DataSnapshot, p1: String?) {
-                snapshot
-                    .getValue(TravelDeal::class.java)
-                    ?.also { deals.add(it) }
-
-                travelDeals.postValue(deals)
+                //deal
+                snapshot.getValue(TravelDeal::class.java)
+                    ?.apply { id = snapshot.key!! }
+                    ?.also { Log.d(TAG, "Deal ${it.dealTitle}") }
+                    ?.also { deals.value!!.add(it) }
+                    ?.also { deals.postValue(deals.value) }
 
             }
 
@@ -32,26 +32,36 @@ class FirebaseGetWay {
             }
 
             override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+
             }
 
             override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+
             }
 
             override fun onChildRemoved(p0: DataSnapshot) {
-            }
 
+            }
         }
     }
 
-    fun saveTravelDeal(travelDeal: TravelDeal) = databaseReference.push().setValue(travelDeal)
+    fun retrieveDeals() = deals as LiveData<List<TravelDeal>>
 
-    fun startListening(travelDeals: MutableLiveData<List<TravelDeal>>) {
+    fun saveTravelDeal(travelDeal: TravelDeal): Task<Void> {
+        return if (travelDeal.id == "")
+            databaseReference.push().setValue(travelDeal)
+        else
+            databaseReference.child(travelDeal.id).setValue(travelDeal)
+    }
 
-        this.travelDeals = travelDeals
+    fun startListening() {
+        deals.value?.clear()
         databaseReference.addChildEventListener(childEventListener)
-
     }
 
     fun stopListening() = databaseReference.removeEventListener(childEventListener)
+
+    fun deleteTravelById(id: String) = databaseReference.child(id).removeValue()
+
 
 }

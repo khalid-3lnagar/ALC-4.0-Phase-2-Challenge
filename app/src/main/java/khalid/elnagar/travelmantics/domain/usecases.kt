@@ -10,7 +10,7 @@ import khalid.elnagar.travelmantics.entities.TravelDeal
 
 class SaveDealUseCase(
     private val loadingProgressBar: MutableLiveData<Boolean>,
-    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay()
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
 ) {
 
     fun saveDeal(travelDeal: TravelDeal, onSuccess: () -> Unit, onFailure: () -> Unit) {
@@ -31,19 +31,38 @@ class SaveDealUseCase(
 
 }
 
+// get deals liveData
+class RetrieveDealsUseCase(
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
+) {
+    operator fun invoke() = firebaseGetWay.retrieveDeals()
+}
+
+//listen to changes on database
 class ReadDealsUseCase(
-    private val deals: MutableLiveData<List<TravelDeal>>,
-    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay()
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
 ) : LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun startListining() {
-        firebaseGetWay.startListening(deals)
+    fun startListening() {
+        firebaseGetWay.startListening()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun stopListinig() {
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun stopListening() {
         firebaseGetWay.stopListening()
     }
 
+}
+
+//delete Travel by id
+class DeleteTravelById(
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
+) {
+    operator fun invoke(id: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        firebaseGetWay.deleteTravelById(id)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure() }
+
+    }
 }

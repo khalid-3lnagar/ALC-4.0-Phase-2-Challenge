@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardElevation="4dp"
+        android:clickable="true"
+        android:layout_margin="@dimen/txt_margin_standard"
+        app:cardCornerRadius="4dp" android:focusable="true">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_height="wrap_content">
+
+        <TextView
+                android:id="@+id/itemDealTitle"
+                android:layout_height="wrap_content"
+                tools:text="@string/title_hint"
+                android:layout_width="0dp"
+                app:layout_constraintStart_toEndOf="@+id/itemDealImg"
+                android:layout_marginStart="@dimen/txt_margin_standard"
+                android:layout_marginEnd="@dimen/txt_margin_standard"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="@+id/itemDealImg"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" android:fontFamily="serif"
+                app:layout_constraintHorizontal_bias="0.0"/>
+        <ImageView
+                android:layout_width="88dp"
+                android:layout_height="88dp" app:srcCompat="@drawable/ic_launcher_foreground"
+                android:id="@+id/itemDealImg"
+                app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="@dimen/txt_margin_standard"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:background="@drawable/ic_launcher_background" android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"/>
+        <TextView
+                tools:text="@string/description_hint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/itemDealDescription" app:layout_constraintStart_toStartOf="@+id/itemDealTitle"
+                android:layout_marginTop="@dimen/txt_margin_standard"
+                app:layout_constraintTop_toBottomOf="@+id/itemDealTitle"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:layout_marginEnd="@dimen/txt_margin_standard"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0"/>
+        <TextView
+                tools:text="@string/price_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/itemDealPrice"
+                app:layout_constraintTop_toBottomOf="@+id/itemDealDescription"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="@dimen/txt_margin_standard" android:textColor="@color/colorAccent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

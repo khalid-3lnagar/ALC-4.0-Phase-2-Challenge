@@ -5,4 +5,6 @@
     <string name="description_hint">Description</string>
     <string name="save_menu">Save</string>
     <string name="loading">loading..</string>
+    <string name="delete">Delete</string>
+    <string name="action_add">Add</string>
 </resources>
