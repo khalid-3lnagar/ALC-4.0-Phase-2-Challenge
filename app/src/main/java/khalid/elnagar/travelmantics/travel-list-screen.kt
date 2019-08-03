@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth.AuthStateListener
+import khalid.elnagar.travelmantics.domain.AuthListenerUseCase
 import khalid.elnagar.travelmantics.domain.ReadDealsUseCase
 import khalid.elnagar.travelmantics.domain.RetrieveDealsUseCase
 import khalid.elnagar.travelmantics.domain.TAG
@@ -17,20 +20,53 @@ import kotlinx.android.synthetic.main.activity_list.*
 import kotlinx.android.synthetic.main.item_travel.view.*
 
 const val DEAL_EXTRA_INTENT = "deal"
+private const val RC_SIGN_IN = 0
 
 //region View
 class ListActivity : AppCompatActivity() {
     private val model by lazy { ViewModelProviders.of(this).get(ListViewModel::class.java) }
     private val dealsLayoutManger by lazy { LinearLayoutManager(this) }
-
     private val dealsAdapter by lazy { DealsListAdapter(model.deals, this) }
+    private val authStateListener by lazy {
+        AuthStateListener {
+            it.currentUser ?: signIn()
+        }
+    }
+
+    private fun signIn() {
+        // Choose authentication providers
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.GoogleBuilder().build(),
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+        // Create and launch sign-in intent
+        AuthUI
+            .getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .setIsSmartLockEnabled(false)
+            .setLogo(R.drawable.ic_launcher_foreground)
+            .build()
+            .also { startActivityForResult(it, RC_SIGN_IN) }
+
+    }
+
+    private fun signOut() {
+        AuthUI.getInstance().signOut(this)
+            .addOnCompleteListener { Log.d(TAG, "User Logged out") }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
-        lifecycle.addObserver(model.readDealsUseCase)
 
-        model.deals.observe(this, Observer { if (it.isNullOrEmpty()) showEmptyText() else showList() })
+        with(model) {
+            authListenerUseCase(authStateListener).also(lifecycle::addObserver)
+
+            lifecycle.addObserver(readDealsUseCase)
+
+            deals.observe(this@ListActivity, Observer { if (it.isNullOrEmpty()) showEmptyText() else showList() })
+        }
         with(rv_deals) {
             layoutManager = dealsLayoutManger
             adapter = dealsAdapter
@@ -42,14 +78,12 @@ class ListActivity : AppCompatActivity() {
         rv_deals.visibility = View.INVISIBLE
     }
 
-
     private fun showList() {
         txtLoading.visibility = View.GONE
         rv_deals.visibility = View.VISIBLE
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-
         menuInflater.inflate(R.menu.list_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
@@ -61,11 +95,27 @@ class ListActivity : AppCompatActivity() {
                     .also(::startActivity)
                 true
             }
-
+            R.id.action_logout -> {
+                signOut()
+                true
+            }
             else -> return super.onOptionsItemSelected(item)
         }
 
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode == RESULT_OK) {
+                //user
+            } else {
+                finish()
+
+            }
+        }
+    }
+
 }
 
 //endregion
@@ -74,7 +124,11 @@ class ListActivity : AppCompatActivity() {
 class ListViewModel(
     val deals: LiveData<List<TravelDeal>> = RetrieveDealsUseCase()(),
     val readDealsUseCase: ReadDealsUseCase = ReadDealsUseCase()
-) : ViewModel()
+) : ViewModel() {
+    fun authListenerUseCase(authStateListener: AuthStateListener) =
+        AuthListenerUseCase(authStateListener)
+
+}
 
 //endregion
 

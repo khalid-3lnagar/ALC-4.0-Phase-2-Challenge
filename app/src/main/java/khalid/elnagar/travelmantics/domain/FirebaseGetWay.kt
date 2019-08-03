@@ -3,6 +3,7 @@ package khalid.elnagar.travelmantics.domain
 import android.util.Log
 import androidx.lifecycle.LiveData
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -44,6 +45,8 @@ object FirebaseGetWay {
             }
         }
     }
+    //auth
+    private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
 
     fun retrieveDeals() = deals as LiveData<List<TravelDeal>>
 
@@ -54,14 +57,21 @@ object FirebaseGetWay {
             databaseReference.child(travelDeal.id).setValue(travelDeal)
     }
 
-    fun startListening() {
+    fun startDatabaseListening() {
         deals.value?.clear()
         databaseReference.addChildEventListener(childEventListener)
     }
 
-    fun stopListening() = databaseReference.removeEventListener(childEventListener)
+    fun stopDatabaseListening() = databaseReference.removeEventListener(childEventListener)
 
     fun deleteTravelById(id: String) = databaseReference.child(id).removeValue()
 
+    fun attachFbAuthListener(authStateListener: FirebaseAuth.AuthStateListener) {
+        firebaseAuth.addAuthStateListener(authStateListener)
+    }
+
+    fun detachFbAuthListener(authStateListener: FirebaseAuth.AuthStateListener) {
+        firebaseAuth.removeAuthStateListener(authStateListener)
+    }
 
 }

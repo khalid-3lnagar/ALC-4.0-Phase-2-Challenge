@@ -4,6 +4,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.OnLifecycleEvent
+import com.google.firebase.auth.FirebaseAuth
 import khalid.elnagar.travelmantics.entities.TravelDeal
 
 //save to data base
@@ -44,14 +45,11 @@ class ReadDealsUseCase(
 ) : LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun startListening() {
-        firebaseGetWay.startListening()
-    }
+    fun startListening() = firebaseGetWay.startDatabaseListening()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun stopListening() {
-        firebaseGetWay.stopListening()
-    }
+    fun stopListening() = firebaseGetWay.stopDatabaseListening()
+
 
 }
 
@@ -65,4 +63,19 @@ class DeleteTravelById(
             .addOnFailureListener { onFailure() }
 
     }
+}
+
+//listen to changes on auth
+class AuthListenerUseCase(
+    private val firebaseAuthStateListener: FirebaseAuth.AuthStateListener,
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
+) : LifecycleObserver {
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun startListening() = firebaseGetWay.attachFbAuthListener(firebaseAuthStateListener)
+
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun stopListening() = firebaseGetWay.detachFbAuthListener(firebaseAuthStateListener)
+
 }
