@@ -28,49 +28,29 @@ class ListActivity : AppCompatActivity() {
     private val dealsLayoutManger by lazy { LinearLayoutManager(this) }
     private val dealsAdapter by lazy { DealsListAdapter(model.deals, this) }
     private val authStateListener by lazy {
-        AuthStateListener {
-            it.currentUser ?: signIn()
-        }
-    }
-
-    private fun signIn() {
-        // Choose authentication providers
-        val providers = arrayListOf(
-            AuthUI.IdpConfig.GoogleBuilder().build(),
-            AuthUI.IdpConfig.EmailBuilder().build()
-        )
-        // Create and launch sign-in intent
-        AuthUI
-            .getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(providers)
-            .setIsSmartLockEnabled(false)
-            .setLogo(R.drawable.ic_launcher_foreground)
-            .build()
-            .also { startActivityForResult(it, RC_SIGN_IN) }
-
-    }
-
-    private fun signOut() {
-        AuthUI.getInstance().signOut(this)
-            .addOnCompleteListener { Log.d(TAG, "User Logged out") }
+        AuthStateListener { it.currentUser ?: startActivityForResult(model.buildSignInIntent(), RC_SIGN_IN) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list)
 
-        with(model) {
-            authListenerUseCase(authStateListener).also(lifecycle::addObserver)
+        initViewModel()
 
-            lifecycle.addObserver(readDealsUseCase)
+        initRecyclerView()
+    }
 
-            deals.observe(this@ListActivity, Observer { if (it.isNullOrEmpty()) showEmptyText() else showList() })
-        }
-        with(rv_deals) {
-            layoutManager = dealsLayoutManger
-            adapter = dealsAdapter
-        }
+    private fun initViewModel() = with(model) {
+        authListenerUseCase(authStateListener).also(lifecycle::addObserver)
+
+        lifecycle.addObserver(readDealsUseCase)
+
+        deals.observe(this@ListActivity, Observer { if (it.isNullOrEmpty()) showEmptyText() else showList() })
+    }
+
+    private fun initRecyclerView() = with(rv_deals) {
+        layoutManager = dealsLayoutManger
+        adapter = dealsAdapter
     }
 
     private fun showEmptyText() {
@@ -91,8 +71,7 @@ class ListActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_add -> {
-                Intent(this, TravelActivity::class.java)
-                    .also(::startActivity)
+                Intent(this, TravelActivity::class.java).also(::startActivity)
                 true
             }
             R.id.action_logout -> {
@@ -104,12 +83,18 @@ class ListActivity : AppCompatActivity() {
 
     }
 
+    private fun signOut() {
+        AuthUI.getInstance().signOut(this)
+            .addOnCompleteListener { Log.d(TAG, "User Logged out") }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
-            if (resultCode == RESULT_OK) {
-                //user
-            } else {
+            if (resultCode == RESULT_OK)
+                Log.d(TAG, "user signed in")
+            else {
+                Log.d(TAG, "user cancel")
                 finish()
 
             }
@@ -128,6 +113,22 @@ class ListViewModel(
     fun authListenerUseCase(authStateListener: AuthStateListener) =
         AuthListenerUseCase(authStateListener)
 
+    fun buildSignInIntent(): Intent {
+        Log.d(TAG, "build Sign-in Intent")
+        // Choose authentication providers
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.GoogleBuilder().build(),
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+        // Create and launch sign-in intent
+        return AuthUI
+            .getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .setIsSmartLockEnabled(false)
+            .setLogo(R.drawable.ic_launcher_foreground)
+            .build()
+    }
 }
 
 //endregion
