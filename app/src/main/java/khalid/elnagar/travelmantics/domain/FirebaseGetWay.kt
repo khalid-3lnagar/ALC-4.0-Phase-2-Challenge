@@ -1,5 +1,6 @@
 package khalid.elnagar.travelmantics.domain
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import com.google.android.gms.tasks.Task
@@ -8,14 +9,19 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import khalid.elnagar.travelmantics.entities.TravelDeal
 
 private const val TRAVEL_DEALS_KEY = "traveldeals"
+private const val DEALS_IMAGES_KEY = "deals_images"
 
 object FirebaseGetWay {
-    private val deals = mutableListOf<TravelDeal>().toMutableLiveData()
+    //database
     private val firebaseDatabase by lazy { FirebaseDatabase.getInstance() }
     private val databaseReference by lazy { firebaseDatabase.reference.child(TRAVEL_DEALS_KEY) }
+    private val deals = mutableListOf<TravelDeal>().toMutableLiveData()
+    //auth
+    private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val childEventListener by lazy {
         object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, p1: String?) {
@@ -45,8 +51,9 @@ object FirebaseGetWay {
             }
         }
     }
-    //auth
-    private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
+    //storage
+    private val firebaseStorage by lazy { FirebaseStorage.getInstance() }
+    private val storageReference by lazy { firebaseStorage.reference.child(DEALS_IMAGES_KEY) }
 
     fun retrieveDeals() = deals as LiveData<List<TravelDeal>>
 
@@ -59,6 +66,7 @@ object FirebaseGetWay {
 
     fun startDatabaseListening() {
         deals.value?.clear()
+        deals.postNewValue()
         databaseReference.addChildEventListener(childEventListener)
     }
 
@@ -73,5 +81,18 @@ object FirebaseGetWay {
     fun detachFbAuthListener(authStateListener: FirebaseAuth.AuthStateListener) {
         firebaseAuth.removeAuthStateListener(authStateListener)
     }
+
+    fun uploadImage(file: Uri) =
+        file.lastPathSegment
+            ?.split("/")
+            ?.let { storageReference.child(it.last()) }
+            ?.putFile(file)
+
+    fun deleteImage(name: String) =
+        name.also { Log.d(TAG, "deleteImage$it") }
+            .let { storageReference.child(name).delete() }
+            .addOnSuccessListener { Log.d(TAG, "Image Successfully deleted") }
+            .addOnFailureListener { Log.d(TAG, "delete Image ${it.message}") }
+
 
 }

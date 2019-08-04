@@ -4,8 +4,9 @@
     <string name="price_hint">Price (Numbers only)</string>
     <string name="description_hint">Description</string>
     <string name="save_menu">Save</string>
-    <string name="loading">loading..</string>
+    <string name="no_deals">No Deals</string>
     <string name="delete">Delete</string>
     <string name="action_add">Add</string>
     <string name="logout">logout</string>
+    <string name="upload_image">Upload Image</string>
 </resources>

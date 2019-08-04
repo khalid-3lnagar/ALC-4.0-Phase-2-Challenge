@@ -8,7 +8,7 @@
         app:cardElevation="4dp"
         android:clickable="true"
         android:layout_margin="@dimen/txt_margin_standard"
-        app:cardCornerRadius="4dp" android:focusable="true">
+        app:cardCornerRadius="4dp" android:focusable="true" android:id="@+id/cardView">
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -18,37 +18,36 @@
 
         <TextView
                 android:id="@+id/itemDealTitle"
-                android:layout_height="30dp"
+                android:layout_height="wrap_content"
                 tools:text="@string/title_hint"
                 android:layout_width="0dp"
                 app:layout_constraintStart_toEndOf="@+id/itemDealImg"
-                android:layout_marginStart="@dimen/txt_margin_standard"
-                android:layout_marginEnd="@dimen/txt_margin_standard"
-                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="@+id/itemDealImg"
+                app:layout_constraintEnd_toEndOf="parent"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large" android:fontFamily="serif"
-                app:layout_constraintHorizontal_bias="0.0"
-        />
+                app:layout_constraintHorizontal_bias="0.5"
+                android:layout_marginStart="8dp"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="8dp" android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/itemDealDescription"/>
         <ImageView
                 android:layout_width="88dp"
-                android:layout_height="88dp" app:srcCompat="@drawable/ic_launcher_foreground"
+                android:layout_height="88dp"
                 android:id="@+id/itemDealImg"
-                app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="@dimen/txt_margin_standard"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:src="@mipmap/ic_launcher"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:background="@drawable/ic_launcher_background" android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginStart="8dp" app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" android:layout_marginTop="8dp"/>
         <TextView
                 tools:text="@string/description_hint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/itemDealDescription" app:layout_constraintStart_toStartOf="@+id/itemDealTitle"
-                android:layout_marginTop="@dimen/txt_margin_standard"
-                app:layout_constraintTop_toBottomOf="@+id/itemDealTitle"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:layout_marginEnd="@dimen/txt_margin_standard"
-                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.1"
-                android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="@+id/itemDealImg"
-                app:layout_constraintVertical_bias="0.0"/>
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintTop_toBottomOf="@+id/itemDealTitle"
+                app:layout_constraintBottom_toTopOf="@+id/itemDealPrice"/>
         <TextView
                 tools:text="@string/price_hint"
                 android:layout_width="0dp"
@@ -59,6 +58,17 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="@dimen/txt_margin_standard" android:textColor="@color/colorAccent"
                 android:layout_marginTop="8dp" app:layout_constraintStart_toEndOf="@+id/itemDealImg"
-                android:layout_marginStart="8dp" android:textAlignment="textEnd"/>
+                android:layout_marginStart="8dp" android:textAlignment="textEnd" android:layout_marginBottom="8dp"
+                app:layout_constraintHorizontal_bias="0.5"/>
+        <androidx.constraintlayout.widget.Barrier android:layout_width="wrap_content"
+                                                  android:layout_height="wrap_content" android:id="@+id/barrier"
+                                                  app:barrierDirection="left"
+                                                  app:layout_constraintStart_toStartOf="parent"
+                                                  app:layout_constraintTop_toTopOf="parent"
+                                                  app:layout_constraintEnd_toEndOf="parent"
+                                                  app:layout_constraintBottom_toBottomOf="parent"
+                                                  app:layout_constraintHorizontal_bias="0.48"
+                                                  app:layout_constraintVertical_bias="0.42000002"
+                                                  app:constraint_referenced_ids="itemDealDescription,itemDealTitle,itemDealPrice"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

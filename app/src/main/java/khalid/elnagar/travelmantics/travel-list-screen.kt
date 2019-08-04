@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import khalid.elnagar.travelmantics.domain.AuthListenerUseCase
@@ -38,29 +39,21 @@ class ListActivity : AppCompatActivity() {
         initViewModel()
 
         initRecyclerView()
+
     }
 
     private fun initViewModel() = with(model) {
-        authListenerUseCase(authStateListener).also(lifecycle::addObserver)
+
+
+        lifecycle.addObserver(authListenerUseCase(authStateListener))
 
         lifecycle.addObserver(readDealsUseCase)
 
-        deals.observe(this@ListActivity, Observer { if (it.isNullOrEmpty()) showEmptyText() else showList() })
     }
 
     private fun initRecyclerView() = with(rv_deals) {
         layoutManager = dealsLayoutManger
         adapter = dealsAdapter
-    }
-
-    private fun showEmptyText() {
-        txtLoading.visibility = View.VISIBLE
-        rv_deals.visibility = View.INVISIBLE
-    }
-
-    private fun showList() {
-        txtLoading.visibility = View.GONE
-        rv_deals.visibility = View.VISIBLE
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -156,13 +149,19 @@ class DealsListAdapter(private val deals: LiveData<List<TravelDeal>>, lifecycleO
             itemDealTitle.text = deal.dealTitle
             itemDealDescription.text = deal.description
             itemDealPrice.text = deal.price
+
             setOnClickListener {
                 Log.d(TAG, "$position clicked")
                 Intent(context, TravelActivity::class.java)
                     .putExtra(DEAL_EXTRA_INTENT, deal)
                     .also(context::startActivity)
-
             }
+            deal.imageURL
+                .takeUnless { it == "" }
+                ?.let { Glide.with(itemDealImg).load(it) }
+                ?.centerCrop()
+                ?.into(itemDealImg)
+
         }
     }
 

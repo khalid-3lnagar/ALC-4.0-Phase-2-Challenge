@@ -8,9 +8,11 @@ data class TravelDeal(
     var price: String = "",
     var description: String = "",
     var imageURL: String = "",
-    var id: String = ""
+    var id: String = "",
+    var imageName: String = ""
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!,
@@ -24,6 +26,7 @@ data class TravelDeal(
         parcel.writeString(description)
         parcel.writeString(imageURL)
         parcel.writeString(id)
+        parcel.writeString(imageName)
     }
 
     override fun describeContents(): Int {
