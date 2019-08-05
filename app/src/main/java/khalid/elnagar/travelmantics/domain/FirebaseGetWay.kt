@@ -12,10 +12,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import khalid.elnagar.travelmantics.entities.TravelDeal
 
-private const val TRAVEL_DEALS_KEY = "traveldeals"
-private const val DEALS_IMAGES_KEY = "deals_images"
-
 object FirebaseGetWay {
+    private const val ADMINISTRATORS_KEY = "administrators"
+    private const val TRAVEL_DEALS_KEY = "traveldeals"
+    private const val DEALS_IMAGES_KEY = "deals_images"
     //database
     private val firebaseDatabase by lazy { FirebaseDatabase.getInstance() }
     private val databaseReference by lazy { firebaseDatabase.reference.child(TRAVEL_DEALS_KEY) }
@@ -30,7 +30,7 @@ object FirebaseGetWay {
                     ?.apply { id = snapshot.key!! }
                     ?.also { Log.d(TAG, "Deal ${it.dealTitle}") }
                     ?.also { deals.value!!.add(it) }
-                    ?.also { deals.postValue(deals.value) }
+                    ?.also { deals.postNewValue() }
 
             }
 
@@ -51,17 +51,55 @@ object FirebaseGetWay {
             }
         }
     }
+    private val isAdmin = false.toMutableLiveData()
     //storage
     private val firebaseStorage by lazy { FirebaseStorage.getInstance() }
     private val storageReference by lazy { firebaseStorage.reference.child(DEALS_IMAGES_KEY) }
 
     fun retrieveDeals() = deals as LiveData<List<TravelDeal>>
 
+    fun retrieveIsAdmin() = isAdmin as LiveData<Boolean>
+
     fun saveTravelDeal(travelDeal: TravelDeal): Task<Void> {
         return if (travelDeal.id == "")
             databaseReference.push().setValue(travelDeal)
         else
             databaseReference.child(travelDeal.id).setValue(travelDeal)
+    }
+
+    fun uploadImage(file: Uri) = file.lastPathSegment
+        ?.split("/")
+        ?.let { storageReference.child(it.last()) }
+        ?.putFile(file)
+
+    fun deleteTravelById(id: String) = databaseReference.child(id).removeValue()
+
+    fun deleteImage(name: String) =
+        name.also { Log.d(TAG, "deleteImage$it") }
+            .let { storageReference.child(name).delete() }
+            .addOnSuccessListener { Log.d(TAG, "Image Successfully deleted") }
+            .addOnFailureListener { Log.d(TAG, "delete Image ${it.message}") }
+
+    fun checkAdmin(uId: String) {
+        isAdmin.postValue(false)
+        firebaseDatabase.reference
+            .child(ADMINISTRATORS_KEY)
+            .child(uId)
+            .addChildEventListener(
+                object : ChildEventListener {
+                    override fun onChildAdded(p0: DataSnapshot, p1: String?) {
+                        println("you are an admin")
+                        isAdmin.postValue(true)
+                    }
+
+                    override fun onCancelled(p0: DatabaseError) {}
+                    override fun onChildMoved(p0: DataSnapshot, p1: String?) {}
+                    override fun onChildChanged(p0: DataSnapshot, p1: String?) {}
+                    override fun onChildRemoved(p0: DataSnapshot) {}
+
+                }
+            )
+
     }
 
     fun startDatabaseListening() {
@@ -72,8 +110,6 @@ object FirebaseGetWay {
 
     fun stopDatabaseListening() = databaseReference.removeEventListener(childEventListener)
 
-    fun deleteTravelById(id: String) = databaseReference.child(id).removeValue()
-
     fun attachFbAuthListener(authStateListener: FirebaseAuth.AuthStateListener) {
         firebaseAuth.addAuthStateListener(authStateListener)
     }
@@ -81,18 +117,4 @@ object FirebaseGetWay {
     fun detachFbAuthListener(authStateListener: FirebaseAuth.AuthStateListener) {
         firebaseAuth.removeAuthStateListener(authStateListener)
     }
-
-    fun uploadImage(file: Uri) =
-        file.lastPathSegment
-            ?.split("/")
-            ?.let { storageReference.child(it.last()) }
-            ?.putFile(file)
-
-    fun deleteImage(name: String) =
-        name.also { Log.d(TAG, "deleteImage$it") }
-            .let { storageReference.child(name).delete() }
-            .addOnSuccessListener { Log.d(TAG, "Image Successfully deleted") }
-            .addOnFailureListener { Log.d(TAG, "delete Image ${it.message}") }
-
-
 }

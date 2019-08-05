@@ -49,11 +49,9 @@ class ReadDealsUseCase(
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun startListening() = firebaseGetWay.startDatabaseListening()
-/*
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun stopListening() = firebaseGetWay.stopDatabaseListening()
-*/
 
 }
 
@@ -68,7 +66,8 @@ class DeleteTravelById(
             return
         loading.postValue(true)
         val task = if (travelDeal.imageName.isNotBlank())
-            firebaseGetWay.deleteImage(travelDeal.imageName)
+            firebaseGetWay
+                .deleteImage(travelDeal.imageName)
                 .onSuccessTask { firebaseGetWay.deleteTravelById(travelDeal.id) }
         else
             firebaseGetWay.deleteTravelById(travelDeal.id)
@@ -110,3 +109,22 @@ class UploadImageUseCase(
             ?.addOnCompleteListener { uploading.postValue(false) }
     }
 }
+
+//check if Admin
+class CheckIfAdminUseCase(
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
+) {
+    operator fun invoke(uId: String) = firebaseGetWay.checkAdmin(uId)
+
+}
+
+class RetrieveIsAdminLiveData(
+    private val firebaseGetWay: FirebaseGetWay = FirebaseGetWay
+) {
+    operator fun invoke() = firebaseGetWay.retrieveIsAdmin()
+}
+
+//delte Image
+
+fun deleteImageUseCase(fileName: String, firebaseGetWay: FirebaseGetWay = FirebaseGetWay) =
+    firebaseGetWay.deleteImage(fileName)

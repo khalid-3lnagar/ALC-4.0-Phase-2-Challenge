@@ -12,10 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
-import khalid.elnagar.travelmantics.domain.AuthListenerUseCase
-import khalid.elnagar.travelmantics.domain.ReadDealsUseCase
-import khalid.elnagar.travelmantics.domain.RetrieveDealsUseCase
-import khalid.elnagar.travelmantics.domain.TAG
+import khalid.elnagar.travelmantics.domain.*
 import khalid.elnagar.travelmantics.entities.TravelDeal
 import kotlinx.android.synthetic.main.activity_list.*
 import kotlinx.android.synthetic.main.item_travel.view.*
@@ -29,7 +26,10 @@ class ListActivity : AppCompatActivity() {
     private val dealsLayoutManger by lazy { LinearLayoutManager(this) }
     private val dealsAdapter by lazy { DealsListAdapter(model.deals, this) }
     private val authStateListener by lazy {
-        AuthStateListener { it.currentUser ?: startActivityForResult(model.buildSignInIntent(), RC_SIGN_IN) }
+        AuthStateListener { auth ->
+            auth.currentUser?.also { model.checkIfAdminUseCase(it.uid) }
+                ?: startActivityForResult(model.buildSignInIntent(), RC_SIGN_IN)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +43,7 @@ class ListActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() = with(model) {
-
+        isAdmin.observe(this@ListActivity, Observer { invalidateOptionsMenu() })
 
         lifecycle.addObserver(authListenerUseCase(authStateListener))
 
@@ -58,7 +58,17 @@ class ListActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.list_menu, menu)
+
         return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.apply {
+
+            findItem(R.id.action_add)?.isVisible = model.isAdmin.value!!
+
+        }
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -77,7 +87,8 @@ class ListActivity : AppCompatActivity() {
     }
 
     private fun signOut() {
-        AuthUI.getInstance().signOut(this)
+        AuthUI.getInstance()
+            .signOut(this)
             .addOnCompleteListener { Log.d(TAG, "User Logged out") }
     }
 
@@ -101,7 +112,9 @@ class ListActivity : AppCompatActivity() {
 //region ViewModel
 class ListViewModel(
     val deals: LiveData<List<TravelDeal>> = RetrieveDealsUseCase()(),
-    val readDealsUseCase: ReadDealsUseCase = ReadDealsUseCase()
+    val isAdmin: LiveData<Boolean> = RetrieveIsAdminLiveData()(),
+    val readDealsUseCase: ReadDealsUseCase = ReadDealsUseCase(),
+    val checkIfAdminUseCase: CheckIfAdminUseCase = CheckIfAdminUseCase()
 ) : ViewModel() {
     fun authListenerUseCase(authStateListener: AuthStateListener) =
         AuthListenerUseCase(authStateListener)
@@ -117,9 +130,8 @@ class ListViewModel(
         return AuthUI
             .getInstance()
             .createSignInIntentBuilder()
+            .setTheme(R.style.AppTheme)
             .setAvailableProviders(providers)
-            .setIsSmartLockEnabled(false)
-            .setLogo(R.drawable.ic_launcher_foreground)
             .build()
     }
 }
@@ -160,7 +172,7 @@ class DealsListAdapter(private val deals: LiveData<List<TravelDeal>>, lifecycleO
                 .takeUnless { it == "" }
                 ?.let { Glide.with(itemDealImg).load(it) }
                 ?.centerCrop()
-                ?.into(itemDealImg)
+                ?.into(itemDealImg) ?: itemDealImg.setImageResource(R.mipmap.ic_launcher)
 
         }
     }

@@ -10,10 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.*
 import com.bumptech.glide.Glide
 import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
@@ -21,6 +18,7 @@ import khalid.elnagar.travelmantics.domain.*
 import khalid.elnagar.travelmantics.entities.TravelDeal
 import kotlinx.android.synthetic.main.activity_travel.*
 
+//region View
 private const val PICTURE_REC = 42
 
 class TravelActivity : AppCompatActivity() {
@@ -53,7 +51,8 @@ class TravelActivity : AppCompatActivity() {
                 type = "image/jpeg"
                 putExtra(Intent.EXTRA_LOCAL_ONLY, true)
 
-            }.let { Intent.createChooser(it, "Insert Picture") }
+            }
+            .let { Intent.createChooser(it, "Insert Picture") }
 
 
     private fun editTravel(deal: TravelDeal) {
@@ -65,14 +64,28 @@ class TravelActivity : AppCompatActivity() {
         deal.imageURL
             .takeUnless { it == "" }
             ?.let { Glide.with(this).load(it) }
-            ?.centerInside()
+            ?.centerCrop()
             ?.into(imageDeal)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater
             .inflate(R.menu.travel_menu, menu)
-        return true
+        menu?.apply {
+            val isAdmin = model.isAdmin.value!!
+            findItem(R.id.action_delete)?.isVisible = isAdmin
+            findItem(R.id.action_save)?.isVisible = isAdmin
+
+            enableEditing(isAdmin)
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    private fun enableEditing(isAdmin: Boolean) {
+        txtTitle.isEnabled = isAdmin
+        txtPrice.isEnabled = isAdmin
+        txtDescription.isEnabled = isAdmin
+        btnImage.isEnabled = isAdmin
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -130,10 +143,13 @@ class TravelActivity : AppCompatActivity() {
     }
 }
 
-//viewModel
+//endregion
+
+//region ViewModel
 class MakeDealViewModel(
     val loadingLD: MutableLiveData<Boolean> = false.toMutableLiveData(),
     val travelDeal: MutableLiveData<TravelDeal> = TravelDeal().toMutableLiveData(),
+    val isAdmin: LiveData<Boolean> = RetrieveIsAdminLiveData()(),
     private val deleteTravelById: DeleteTravelById = DeleteTravelById(loadingLD),
     private val saveDealUseCase: SaveDealUseCase = SaveDealUseCase(loadingLD),
     private val uploadImageUseCase: UploadImageUseCase = UploadImageUseCase(loadingLD)
@@ -149,11 +165,14 @@ class MakeDealViewModel(
     }
 
     fun uploadImage(file: Uri) {
+        if (travelDeal.value!!.imageURL.isNotBlank())
+            deleteImageUseCase(travelDeal.value?.imageName!!)
+
         uploadImageUseCase(file)
             ?.addOnSuccessListener {
                 travelDeal.value?.imageName = it.storage.name
                 storeDownloadUrl(it)
-                Log.d(TAG, "uploadImage \nImage ${travelDeal.value?.imageName} \nURL ${travelDeal.value?.imageURL} ")
+                Log.d(TAG, "uploadImage \nImage ${it.storage.name} \nURL ${travelDeal.value?.imageURL} ")
             }
             ?.also { uploadTask = it }
 
@@ -163,6 +182,7 @@ class MakeDealViewModel(
     private fun storeDownloadUrl(taskSnapshot: UploadTask.TaskSnapshot) {
         taskSnapshot.storage.downloadUrl
             .addOnCompleteListener {
+                it.result.toString()
                 with(travelDeal) {
                     value?.imageURL = it.result.toString()
                     postValue(value)
@@ -175,3 +195,4 @@ class MakeDealViewModel(
         uploadTask?.cancel()
     }
 }
+//endregion

@@ -1,8 +1,9 @@
 package khalid.elnagar.travelmantics.entities
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 
+@Parcelize
 data class TravelDeal(
     var dealTitle: String = "",
     var price: String = "",
@@ -10,36 +11,4 @@ data class TravelDeal(
     var imageURL: String = "",
     var id: String = "",
     var imageName: String = ""
-) : Parcelable {
-    constructor(parcel: Parcel) : this(
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!,
-        parcel.readString()!!
-    )
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(dealTitle)
-        parcel.writeString(price)
-        parcel.writeString(description)
-        parcel.writeString(imageURL)
-        parcel.writeString(id)
-        parcel.writeString(imageName)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<TravelDeal> {
-        override fun createFromParcel(parcel: Parcel): TravelDeal {
-            return TravelDeal(parcel)
-        }
-
-        override fun newArray(size: Int): Array<TravelDeal?> {
-            return arrayOfNulls(size)
-        }
-    }
-}
+) : Parcelable
